@@ -144,7 +144,17 @@ const Product = () => {
           <div className="col-md-3">
             <h1>Shopping Cart</h1>
             {cart.length === 0 ? (
+              <>
+              <div className="card">
+                <div className="card-body" style={{border:"0"}}>
               <p>Your cart is empty.</p>
+              <div className="d-flex justify-content-center">
+                          <img src='./images/trolley.png' alt="" className="img-fluid" />
+                        </div>
+                        </div>
+</div>
+                        </>
+              
             ) : (
               <div>
                 {cart.map((product, index) => (
