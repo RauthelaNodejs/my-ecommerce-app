@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaRegEdit } from "react-icons/fa";
 import { Modal } from 'react-bootstrap';
 import { MdDeleteForever } from "react-icons/md";
+import { Spinner } from 'react-bootstrap';
 
 const Product = () => {
   const [products, setProducts] = useState([]);
@@ -15,11 +16,13 @@ const Product = () => {
   const [productTitle, setProductTitle] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productDesp, setProductDesp] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const handleCloseEdit = () => setShowEdit(false);
   const handleShowEdit = () => setShowEdit(true);
 
   const fetchProductList = async () => {
+    setLoading(true);
     try {
       const response = await ADMINAPI({
         url: `https://dummyjson.com/products`,
@@ -28,6 +31,8 @@ const Product = () => {
       setProducts(response.products);
     } catch (error) {
       console.log("Error fetching products:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,55 +111,58 @@ const Product = () => {
           <div className="col-md-9">
             <h3>Product List</h3>
             <hr />
-            <div className="row">
-              {products.map((product) => (
-                <div key={product.id} className="col-md-4 mb-3">
-                  <div className="card">
-                    <div className="card-body" style={{ position: 'relative' }}>
-                      <>
-                        <h6 className="card-title" style={{ maxWidth: "250px" }}>{product.title} </h6>
-                        <hr className="hr" />
-                        <div className="d-flex justify-content-center">
-                          <img src={product.images[0]} alt="" style={{ maxWidth: "200px", height: "100px" }} />
-                        </div>
-                        <hr />
-                        <p className="card-text my-3">{product.description}</p>
-                        <hr className="hr mt-2" />
-                        <div className="d-flex align-items-baseline justify-content-between">
-                          <button type="btn" className="btn btn-primary btn-sm">Price: ${product.price}</button>
-                          <button
-                            className="btn btn-outline-primary btn-sm"
-                            onClick={() => addToCart(product)}
-                          >
-                            Add to Cart
-                          </button>
-                          <FaRegEdit
-                            style={{ position: 'absolute', top: '10px', right: '10px', color: 'secondary', fontSize: '20px', cursor: 'pointer' }}
-                            onClick={() => toggleEdit(product)}
-                          />
-                        </div>
-                      </>
+            {loading ? (
+              <div className="d-flex justify-content-center">
+                <Spinner animation="border" />
+              </div>
+            ) : (
+              <div className="row">
+                {products.map((product) => (
+                  <div key={product.id} className="col-md-4 mb-3">
+                    <div className="card">
+                      <div className="card-body" style={{ position: 'relative' }}>
+                        <>
+                          <h6 className="card-title" style={{ maxWidth: "250px" }}>{product.title} </h6>
+                          <hr className="hr" />
+                          <div className="d-flex justify-content-center">
+                            <img src={product.images[0]} alt="" style={{ maxWidth: "200px", height: "100px" }} />
+                          </div>
+                          <hr />
+                          <p className="card-text my-3">{product.description}</p>
+                          <hr className="hr mt-2" />
+                          <div className="d-flex align-items-baseline justify-content-between">
+                            <button type="btn" className="btn btn-primary btn-sm">Price: ${product.price}</button>
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => addToCart(product)}
+                            >
+                              Add to Cart
+                            </button>
+                            <FaRegEdit
+                              style={{ position: 'absolute', top: '10px', right: '10px', color: 'secondary', fontSize: '20px', cursor: 'pointer' }}
+                              onClick={() => toggleEdit(product)}
+                            />
+                          </div>
+                        </>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="col-md-3">
             <h1>Shopping Cart</h1>
             {cart.length === 0 ? (
-              <>
               <div className="card">
-                <div className="card-body" style={{border:"0"}}>
-              <p>Your cart is empty.</p>
-              <div className="d-flex justify-content-center">
-                          <img src='./images/trolley.png' alt="" className="img-fluid" />
-                        </div>
-                        </div>
-</div>
-                        </>
-              
+                <div className="card-body" style={{ border: "0" }}>
+                  <p>Your cart is empty.</p>
+                  <div className="d-flex justify-content-center">
+                    <img src='./images/trolley.png' alt="" className="img-fluid" />
+                  </div>
+                </div>
+              </div>
             ) : (
               <div>
                 {cart.map((product, index) => (
@@ -162,8 +170,8 @@ const Product = () => {
                     <div className="card-body">
                       <h5 className="card-title">{product.title}</h5>
                       <div className="d-flex justify-content-center">
-                          <img src={product.images[0]} alt="" style={{ maxWidth: "200px", height: "100px" }} />
-                        </div>
+                        <img src={product.images[0]} alt="" style={{ maxWidth: "200px", height: "100px" }} />
+                      </div>
                       <p>Quantity: {product.quantity}</p>
                       <button type="btn" className="btn btn-primary">Price: ${product.price}</button>
                       <div className="mt-3">
