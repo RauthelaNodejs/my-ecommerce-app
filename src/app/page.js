@@ -1,10 +1,12 @@
-import Image from "next/image";
-import styles from "./page.module.css";
-import Product from "./components/product";
+
+import Header from "./components/Layout/Header";
+import Layout from "./components/Layout";
 export default function Home() {
   return (
    <div>
-    <Product />
+    <Header/>
+     <Layout /> 
+   
    </div>
   );
 }
