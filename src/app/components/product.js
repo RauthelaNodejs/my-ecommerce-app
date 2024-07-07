@@ -1,25 +1,29 @@
+// components/Product.js
 'use client';
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ADMINAPI } from "../../../api";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaRegEdit } from "react-icons/fa";
 import { Modal } from 'react-bootstrap';
 import { MdDeleteForever } from "react-icons/md";
 import { Spinner } from 'react-bootstrap';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchProductsSuccess, addToCart, removeFromCart, removeAllFromCart, placeOrder, toggleEdit, saveChanges } from '../../../store/actions/product';
 
 const Product = () => {
-  const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [orderSuccess, setOrderSuccess] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [productId, setProductId] = useState('');
+  const products = useSelector((state) => state.products);
+  const cart = useSelector((state) => state.cart);
+  const orderSuccess = useSelector((state) => state.orderSuccess);
+  const showEdit = useSelector((state) => state.showEdit);
+  const editProduct = useSelector((state) => state.editProduct);
+  const dispatch = useDispatch();
+
+  const [loading, setLoading] = useState(true);
   const [productTitle, setProductTitle] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productDesp, setProductDesp] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  const handleCloseEdit = () => setShowEdit(false);
-  const handleShowEdit = () => setShowEdit(true);
+  const handleCloseEdit = () => dispatch(toggleEdit());
 
   const fetchProductList = async () => {
     setLoading(true);
@@ -28,7 +32,7 @@ const Product = () => {
         url: `https://dummyjson.com/products`,
         method: "GET",
       });
-      setProducts(response.products);
+      dispatch(fetchProductsSuccess(response.products));
     } catch (error) {
       console.log("Error fetching products:", error);
     } finally {
@@ -40,52 +44,13 @@ const Product = () => {
     fetchProductList();
   }, []);
 
-  const addToCart = (product) => {
-    const index = cart.findIndex(item => item.id === product.id);
-    if (index !== -1) {
-      const updatedCart = [...cart];
-      updatedCart[index].quantity += 1;
-      setCart(updatedCart);
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
-  };
-
-  const removeFromCart = (index) => {
-    const updatedCart = [...cart];
-    updatedCart[index].quantity -= 1;
-    if (updatedCart[index].quantity === 0) {
-      updatedCart.splice(index, 1);
-    }
-    setCart(updatedCart);
-  };
-
-  const removeAllFromCart = (index) => {
-    const updatedCart = [...cart];
-    updatedCart.splice(index, 1);
-    setCart(updatedCart);
-  };
-
   const calculateTotalPrice = () => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const placeOrder = () => {
-    setCart([]);
-    setOrderSuccess(true);
-    setTimeout(() => setOrderSuccess(false), 3000);
-  };
-
-  const toggleEdit = (product) => {
-    setProductId(product.id);
-    setProductTitle(product.title);
-    setProductPrice(product.price);
-    setProductDesp(product.description);
-    setShowEdit(true);
-  };
-
   const handleEditChanges = async () => {
     const payload = {
+      id: editProduct.id,
       title: productTitle,
       description: productDesp,
       price: parseInt(productPrice),
@@ -93,11 +58,11 @@ const Product = () => {
 
     try {
       await ADMINAPI({
-        url: `https://dummyjson.com/products/${productId}`,
+        url: `https://dummyjson.com/products/${editProduct.id}`,
         method: "PUT",
         body: { ...payload },
       });
-      setShowEdit(false);
+      dispatch(saveChanges(payload));
       fetchProductList();
     } catch (error) {
       console.log("Error updating product:", error);
@@ -134,13 +99,18 @@ const Product = () => {
                             <button type="btn" className="btn btn-primary btn-sm">Price: ${product.price}</button>
                             <button
                               className="btn btn-outline-primary btn-sm"
-                              onClick={() => addToCart(product)}
+                              onClick={() => dispatch(addToCart(product))}
                             >
                               Add to Cart
                             </button>
                             <FaRegEdit
                               style={{ position: 'absolute', top: '10px', right: '10px', color: 'secondary', fontSize: '20px', cursor: 'pointer' }}
-                              onClick={() => toggleEdit(product)}
+                              onClick={() => {
+                                setProductTitle(product.title);
+                                setProductPrice(product.price);
+                                setProductDesp(product.description);
+                                dispatch(toggleEdit(product));
+                              }}
                             />
                           </div>
                         </>
@@ -177,33 +147,33 @@ const Product = () => {
                       <div className="mt-3">
                         <button
                           className="btn btn-outline-secondary btn-sm mx-2"
-                          onClick={() => removeFromCart(index)}
+                          onClick={() => dispatch(removeFromCart(index))}
                         >
                           -
                         </button>
                         <button
                           className="btn btn-outline-secondary btn-sm mx-2"
-                          onClick={() => removeAllFromCart(index)}
+                          onClick={() => dispatch(removeAllFromCart(index))}
                         >
                           Remove All
                         </button>
                         <button
                           className="btn btn-outline-secondary btn-sm mx-2"
-                          onClick={() => addToCart(product)}
+                          onClick={() => dispatch(addToCart(product))}
                         >
                           +
                         </button>
                       </div>
                       <MdDeleteForever
                         style={{ position: 'absolute', top: '10px', right: '10px', color: 'red', fontSize: '20px', cursor: 'pointer' }}
-                        onClick={() => removeAllFromCart(index)}
+                        onClick={() => dispatch(removeAllFromCart(index))}
                       />
                     </div>
                   </div>
                 ))}
                 <div className="d-flex justify-content-between align-items-center">
                   <h5>Total: ${calculateTotalPrice().toFixed(2)}</h5>
-                  <button className="btn btn-success" onClick={placeOrder}>
+                  <button className="btn btn-success" onClick={() => dispatch(placeOrder())}>
                     Place Order
                   </button>
                 </div>
